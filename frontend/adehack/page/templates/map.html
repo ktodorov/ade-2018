@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block leaflet_requirements %}
+	{% load leaflet_tags %}
+	{% load staticfiles %}
+{% endblock %}
+
+{% block leafletstyles %}
+    {% leaflet_js %}
+    {% leaflet_css %}
+{% endblock %}
+
+
+{% block main_content %}
+
+{% leaflet_map "festmap" callback="window.map_init_basic" %}
+
+{% endblock %}
