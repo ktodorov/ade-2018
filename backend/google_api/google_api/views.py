@@ -5,6 +5,7 @@ from .location import Location
 from .responses.distance import Distance
 import googlemaps
 import json
+from . import settings
 
 # Create your views here.
 
@@ -49,14 +50,34 @@ def getCitiesByCoordinates(request):
     return JsonResponse("hello, world", safe=False)
 
 def calculateDistanceBetweenTwoPoints(location1, location2):
-    googleMapsClient = googlemaps.Client(key='AIzaSyDXgDfHfSIf7pmZI7_MiANSJ9L2iD4lOE8')
+    distanceMapMode = "driving"
+    
+    googleMapsClient = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
     origin = (location1.latitude, location1.longitude)
     destination = (location2.latitude, location2.longitude)
-    matrix = googleMapsClient.distance_matrix(origin, destination, mode="driving")
-    if matrix is None:
+    matrix = googleMapsClient.distance_matrix(origin, destination, mode=distanceMapMode)
+    
+    rowsKey = "rows"
+    elementsKey = "elements"
+    distanceKey = "distance"
+    durationKey = "duration"
+    valueKey = "value"
+
+    # make a check if the json returned from google api contains everything we need
+    if (matrix is None or rowsKey not in matrix or len(matrix[rowsKey]) <= 0 or 
+        elementsKey not in matrix[rowsKey][0] or len(matrix[rowsKey][0][elementsKey]) <= 0 or 
+        durationKey not in matrix[rowsKey][0][elementsKey][0] or 
+        distanceKey not in matrix[rowsKey][0][elementsKey][0] or 
+        valueKey not in matrix[rowsKey][0][elementsKey][0][durationKey] or 
+        valueKey not in matrix[rowsKey][0][elementsKey][0][distanceKey]):
+        return None
+    
+    meters = matrix[rowsKey][0][elementsKey][0][distanceKey][valueKey]
+    seconds = matrix[rowsKey][0][elementsKey][0][durationKey][valueKey]
+    if not meters or not seconds:
         return None
 
-    kilometers = matrix["rows"][0]["elements"][0]["distance"]["value"] / 1000 # distance is in meters
-    minutes =  round(matrix["rows"][0]["elements"][0]["duration"]["value"] / 60, 2) # duration is in seconds
+    kilometers = meters / 1000 # distance is in meters
+    minutes =  round(seconds / 60, 2) # duration is in seconds
 
     return Distance(kilometers, minutes)
