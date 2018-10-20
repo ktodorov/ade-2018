@@ -7,6 +7,7 @@ from .venue_client import VenueClient
 from .songkick_client import SongkickClient
 from .location import Location
 from .EA_locator import evaluation, get_best_location
+from DataReader import *
 import csv
 import numpy as np
 import json
@@ -47,11 +48,12 @@ class VenuesView(views.APIView):
         if size == 1:
             bestVenue = None
             for city in cities:
-                venues = self.songkickClient.findVenues(city)
+                # venues = self.songkickClient.findVenues(city)
+                venues = open_file(venues_dict)
                 currentBestVenue = self.venueClient.getTopVenue(optimum, venues)
                 if not bestVenue or currentBestVenue.score > bestVenue.score:
                     bestVenue = currentBestVenue
-            
+
             results = ScoredVenuesSerializer(bestVenue).data
             return Response(results)
 
