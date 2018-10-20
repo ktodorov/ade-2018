@@ -1,25 +1,29 @@
-from rest_framework import views
-from rest_framework.response import Response
-from django.http import HttpResponseNotAllowed, HttpResponseBadRequest, HttpResponseServerError, JsonResponse
-from .serializers import VenuesSerializer, ScoredVenuesSerializer
-from .gmaps_client import GMapsClient
-from .venue_client import VenueClient
-from .songkick_client import SongkickClient
-from .location import Location
-from .EA_locator import evaluation, get_best_location
-from DataReader import *
 import csv
 import numpy as np
 import json
 import random
-
-# from .models import Venue
 import requests as req
 
+from rest_framework import views
+from rest_framework.response import Response
+from django.http import HttpResponseNotAllowed, HttpResponseBadRequest, HttpResponseServerError, JsonResponse
+
+from .serializers.venues_serializer import VenuesSerializer
+from .serializers.scored_venues_serializer import ScoredVenuesSerializer
+
+from .gmaps_service import GMapsService
+from .venue_service import VenueService
+from .songkick_service import SongkickService
+from .evolutionary_service import EvolutionaryService
+
+from .models.location import Location
+from .models.supplier import Supplier
+
 class VenuesView(views.APIView):
-    venueClient = VenueClient()
-    songkickClient = SongkickClient()
-    gmapsClient = GMapsClient()
+    venueService = VenueService()
+    songkickService = SongkickService()
+    gmapsService = GMapsService()
+    evolutionaryService = EvolutionaryService()
 
     def post(self, request):
         if not request.body:
@@ -28,17 +32,19 @@ class VenuesView(views.APIView):
         # parse coordinates from the POST body
         jsonData = json.loads(request.body)
         coordinatesKey = "coordinates"
-        coordinates = []
+        suppliers = []
         if not jsonData or coordinatesKey not in jsonData:
             return HttpResponseBadRequest("Invalid body provided")
 
         for currentCoordinates in jsonData[coordinatesKey]:
-            coordinates.append(["", "", random.randint(1, 10), currentCoordinates[0], currentCoordinates[1]])
+            frequency = random.randint(1, 10)
+            supplierLocation = Location(currentCoordinates[0], currentCoordinates[1])
+            currentSupplier = Supplier(supplierLocation, frequency)
+            suppliers.append(currentSupplier)
 
-        optimumResult = get_best_location(evaluation, coordinates, self.gmapsClient)
-        optimum = Location(optimumResult[0], optimumResult[1])
+        optimumLocation = self.evolutionaryService.getBestLocation(suppliers, self.gmapsService)
 
-        cities = self.gmapsClient.getClosestAddressableLocations(optimum.latitude, optimum.longitude)
+        cities = self.gmapsService.getClosestAddressableLocations(optimumLocation)
 
         sizeKey = "size"
         if sizeKey not in request.GET or not request.GET[sizeKey].isdigit():
@@ -48,9 +54,8 @@ class VenuesView(views.APIView):
         if size == 1:
             bestVenue = None
             for city in cities:
-                # venues = self.songkickClient.findVenues(city)
-                venues = open_file(venues_dict)
-                currentBestVenue = self.venueClient.getTopVenue(optimum, venues)
+                venues = self.songkickService.findVenues(city)
+                currentBestVenue = self.venueService.getTopVenue(optimumLocation, venues)
                 if not bestVenue or currentBestVenue.score > bestVenue.score:
                     bestVenue = currentBestVenue
 
@@ -60,8 +65,8 @@ class VenuesView(views.APIView):
 
         bestVenues = []
         for city in cities:
-            venues = self.songkickClient.findVenues(city)
-            currentBestVenues = self.venueClient.getTopVenues(optimum, venues)
+            venues = self.songkickService.findVenues(city)
+            currentBestVenues = self.venueService.getTopVenues(optimumLocation, venues)
             bestVenues.extend(currentBestVenues)
 
         bestVenues.sort(key=lambda x: x.score)

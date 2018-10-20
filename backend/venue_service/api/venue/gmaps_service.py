@@ -1,11 +1,12 @@
 import googlemaps
-from .location import Location 
-from .distance import Distance
+import sys
+from .models.location import Location
+from .models.distance import Distance
 from .exceptions.invalid_use_error import InvalidUseError
 from .exceptions.server_error import ServerError
-from .models import Distance as DbDistance
+from .models.db_distance import DbDistance
 
-class GMapsClient:
+class GMapsService:
     googleMapsClient = None
     GOOGLE_MAPS_API_KEY = 'AIzaSyDXgDfHfSIf7pmZI7_MiANSJ9L2iD4lOE8'
 
@@ -74,10 +75,10 @@ class GMapsClient:
         
         return result
 
-    def getClosestAddressableLocations(self, latitude, longitude):
+    def getClosestAddressableLocations(self, location):
         reverseGeocodeResults = []
         try:
-            reverseGeocodeResults = self.googleMapsClient.reverse_geocode((latitude, longitude))
+            reverseGeocodeResults = self.googleMapsClient.reverse_geocode((location.latitude, location.longitude))
         except googlemaps.exceptions.HTTPError as httpError:
             if httpError.status_code == 400:
                 raise InvalidUseError("Invalid parameters ")
