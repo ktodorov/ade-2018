@@ -12,7 +12,9 @@
 
 
 {% block main_content %}
-
+<div id="waiting">
+    <img src="static/waiting.gif" alt="waiting">
+</div>
 {% leaflet_map "festmap" callback="window.map_init_basic" %}
 
 <script>
@@ -27,32 +29,33 @@
                     fillOpacity: 1
                 }
 
-    // http://localhost:8001/api/best-venues/?size=1
-
-    // $.get( "http://localhost:8001/api/best-venues/?size=1", function( data ) {
-    //     alert( "Data Loaded: " + data );
-    // });
-
-    $.ajax({
-            type: 'GET',
-            crossDomain:'true',
-            url: 'http://localhost:8001/api/best-venues/?size=1',
-            success: function (data) {
-                console.log("Here is the data", data);
-            },
-            error: function () {
-                alert("Error loading data");
-            }
-        });
-
     // var showSuppliers = false
     var suppliers = [
-        [42.9680, 2.9036],
-        [53.3680, -2.9036],
-        [32.40, 7.36],
-        [51.444, -0.22],
-        [43.91160, 5.136],
-        [49.5680, 12.9036]
+        [51.916827, 6.565444],
+        [52.417835, 4.82299],
+        [52.40127, 4.906508],
+        [52.198338, 4.609229],
+        [51.656157, 5.627721],
+        [52.424771, 4.82266],
+        [51.591306, 4.307119],
+        [51.44942, 5.553671],
+        [52.077788, 5.146365],
+        [52.170038, 5.348386],
+        [52.04924, 4.406575],
+        [51.933217, 4.629032],
+        [51.125745, 5.586901],
+        [52.276806, 4.83564],
+        [51.355006, 5.20121],
+        [52.099897, 5.093387],
+        [52.48344, 4.631209],
+        [52.035774, 4.502166],
+        [52.30456, 4.940811],
+        [52.181601, 5.273927],
+        [52.083619, 5.093251],
+        [51.866589, 4.540128],
+        [52.394246, 4.850741],
+        [52.4588, 4.813851],
+        [51.721576, 5.312711]
     ]
     var supplierMarker = {
                     radius: 8,
@@ -67,24 +70,68 @@
     
     function map_init_basic (map, options) {
         $('#findVenue').click(() => {
-            L.circleMarker(venue, venueMarker).addTo(map);
-
-            map.fitBounds(suppliers);
+            $.ajax({
+                type: 'POST',
+                crossDomain:'true',
+                url: 'http://localhost:8001/api/best-venues/?size=1',
+                data: JSON.stringify({"coordinates" : suppliers}),
+                success: function (data) {
+                    var coords = [data['latitude'], data['longitude']];
+                    L.circleMarker([coords[0], coords[1]], venueMarker).addTo(map);
+                    map.fitBounds(suppliers);
+                },
+                error: function () {
+                    alert("Error loading data");
+                }
+            });
+        })
+        $('#findVenues').click(() => {
+            $.ajax({
+                type: 'POST',
+                crossDomain:'true',
+                url: 'http://localhost:8001/api/best-venues/?size=5',
+                data: JSON.stringify({"coordinates" : suppliers}),
+                success: function (data) {
+                    var venueMarkerGroup = L.layerGroup().addTo(map);
+                    console.log(venueMarkerGroup)
+                    for (var i=0; i<data.length; i++) {
+                        var coords = [data[i]['latitude'], data[i]['longitude']];
+                        L.circleMarker([coords[0], coords[1]], venueMarker).addTo(venueMarkerGroup);
+                    }
+                    map.fitBounds(suppliers);
+                },
+                error: function () {
+                    alert("Error loading data");
+                }
+            });
         })
 
+        $(document).ajaxStart(function () {
+            $("#waiting").show();
+        }).ajaxStop(function () {
+            $("#waiting").hide();
+        });
+
+        var supplierMarkerGroup;
         $('#findSuppliers').click(() => {
+            supplierMarkerGroup = L.layerGroup().addTo(map);
             for (var i=0; i<suppliers.length; i++) {
-                L.circleMarker(suppliers[i], supplierMarker).addTo(map);
+                L.circleMarker(suppliers[i], supplierMarker).addTo(supplierMarkerGroup);
             }
             map.fitBounds(suppliers);
         })
 
-        var heat = L.heatLayer(suppliers)
+        var heat = L.heatLayer(suppliers, {radius : 50, opacity : 1, gradient : {0.6: 'red'} })
         $('#heatmap').click(() => {
             if (!heatmap){
+                map.removeLayer(supplierMarkerGroup)
                 heat.addTo(map);
                 heatmap = true;
             } else {
+                supplierMarkerGroup = L.layerGroup().addTo(map);
+                for (var i=0; i<suppliers.length; i++) {
+                    L.circleMarker(suppliers[i], supplierMarker).addTo(supplierMarkerGroup);
+                }
                 map.removeLayer(heat);
                 heatmap = false;
             } 

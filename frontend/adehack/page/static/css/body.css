@@ -1,17 +1,43 @@
 html, body, #container /*, and all other map parent selectors*/ {
     height: 100%;
-    overflow: hidden;
+    /* overflow: hidden; */
     width: 100%;
 }
 
 #festmap {
-    margin-top: -19px;
+    margin-top: 50px;
 	width: auto;
     height: 100%;
+    z-index: 0 !important;
+    position: relative;
+    /* display:none; */
 }
 
-.action{
+.action {
     cursor:pointer;
+}
+
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index:10;
+}
+
+.dropdown-menu {
+    position: absolute;
+    z-index:10;
+}
+
+#waiting{
+    height: 200px;
+    width: 200px;
+    position: absolute;
+    right: 50vw;
+    top: 50vh;
+    z-index: 2 !important;
+    pointer-events: auto;
+    display: none;
 }
 
 /* .leaflet-control-zoom{
