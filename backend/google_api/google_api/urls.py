@@ -19,6 +19,6 @@ from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('cities/', views.getCitiesByCoordinates, name='cities'),
+    path('addressable-locations/', views.getClosestAddressableLocationsByCoordinates, name='addressable-locations'),
     path('distance/', views.getDistanceBetweenTwoPoints, name='distance'),
 ]
