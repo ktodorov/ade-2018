@@ -29,10 +29,10 @@ class VenuesView(views.APIView):
 
     def get(self, request):
         #windows
-        # data = self.open_file('E:\\OneDrive\\Work\\aed-2018\\backend\\venue_service\\api\\test_data.csv')
+        data = self.open_file('E:\\OneDrive\\Work\\aed-2018\\backend\\venue_service\\api\\test_data.csv')
         #mac
-        data = self.open_file('/Users/oziek/Documents/aed-2018/backend/venue_service/api/test_data.csv')
-        optimumResult = get_best_location(evaluation, data)
+        # data = self.open_file('/Users/oziek/Documents/aed-2018/backend/venue_service/api/test_data.csv')
+        optimumResult = get_best_location(evaluation, data, self.gmapsClient)
         optimum = Location(optimumResult[0], optimumResult[1])
 
         cities = self.gmapsClient.getClosestAddressableLocations(optimum.latitude, optimum.longitude)

@@ -3,19 +3,43 @@ from .location import Location
 from .distance import Distance
 from .exceptions.invalid_use_error import InvalidUseError
 from .exceptions.server_error import ServerError
+from .models import Distance as DbDistance
 
 class GMapsClient:
     googleMapsClient = None
     GOOGLE_MAPS_API_KEY = 'AIzaSyDXgDfHfSIf7pmZI7_MiANSJ9L2iD4lOE8'
 
+    cachedDistances = {}
+    distanceRoundSize = 3
+
     def __init__(self):
         self.googleMapsClient = googlemaps.Client(key=self.GOOGLE_MAPS_API_KEY)
+        distances = DbDistance.objects.all()
+        print ("distances found in db - ", len(distances))
+
+        for distance in distances:
+            key = (round(distance.sourceLatitude, self.distanceRoundSize), 
+                   round(distance.sourceLongitude, self.distanceRoundSize), 
+                   round(distance.destinationLatitude, self.distanceRoundSize), 
+                   round(distance.destinationLongitude, self.distanceRoundSize))
+
+            self.cachedDistances[key] = Distance(distance.kilometers, distance.minutes)
 
     def calculateDistance(self, location1, location2):
         distanceMapMode = "driving"
     
         origin = (location1.latitude, location1.longitude)
         destination = (location2.latitude, location2.longitude)
+
+        hashKey = (round(origin[0], self.distanceRoundSize), 
+                   round(origin[1], self.distanceRoundSize), 
+                   round(destination[0], self.distanceRoundSize), 
+                   round(destination[1], self.distanceRoundSize))
+
+        if hashKey in self.cachedDistances:
+            distance = self.cachedDistances[hashKey]
+            return distance
+        
         matrix = self.googleMapsClient.distance_matrix(origin, destination, mode=distanceMapMode)
         
         rowsKey = "rows"
@@ -41,7 +65,14 @@ class GMapsClient:
         kilometers = meters / 1000 # distance is in meters
         minutes =  round(seconds / 60, 2) # duration is in seconds
 
-        return Distance(kilometers, minutes)
+        result = Distance(kilometers, minutes)
+        self.cachedDistances[hashKey] = result
+        
+        newDistance = DbDistance()
+        newDistance.populate(origin[0], origin[1], destination[0], destination[1], kilometers, minutes)
+        newDistance.save()
+        
+        return result
 
     def getClosestAddressableLocations(self, latitude, longitude):
         reverseGeocodeResults = []

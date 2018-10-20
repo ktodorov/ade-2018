@@ -80,7 +80,7 @@ class Individual(object):
 
 #Suppliers -> (lat,long,freq)
 class Population(object):
-    def __init__(self,n_pop, suppliers):
+    def __init__(self,n_pop, suppliers, gmapsClient):
         self.pop = []
         self.size = n_pop
         self.suppliers = suppliers
@@ -88,6 +88,7 @@ class Population(object):
         self.offsprings = []
         self.offspring_size = n_pop
         self.mating_pool_size = n_pop
+        self.gmapsClient = gmapsClient
 
 
     def init_pop(self):
@@ -121,7 +122,7 @@ class Population(object):
 
     def evaluate_group(self,group, evaluation_func, frequencies, coords):
         for individual in group:
-            individual.fitness = evaluation_func(individual.genotype,frequencies,coords)
+            individual.fitness = evaluation_func(individual.genotype,frequencies,coords, self.gmapsClient)
 
     def sort_pop_by_fitness(self):
         self.pop.sort(key=lambda x: x.fitness, reverse=True)
