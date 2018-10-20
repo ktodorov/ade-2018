@@ -1,18 +1,17 @@
-html {
-    overflow: scroll;
-    overflow-x: hidden;
-}
-body{
-   margin:0;
-}
-::-webkit-scrollbar {
-    width: 0px;
-    background: transparent;
+html, body, #container /*, and all other map parent selectors*/ {
+    height: 100%;
+    overflow: hidden;
+    width: 100%;
 }
 
 #festmap {
-	width: 100%;
-    height: 100vh;
+    margin-top: -19px;
+	width: auto;
+    height: 100%;
+}
+
+.action{
+    cursor:pointer;
 }
 
 /* .leaflet-control-zoom{

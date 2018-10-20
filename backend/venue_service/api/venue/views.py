@@ -1,20 +1,50 @@
 from rest_framework import views
 from rest_framework.response import Response
-from .serializers import VenuesSerializer
-from .models import Venue
+from django.http import HttpResponseNotAllowed, HttpResponseBadRequest, HttpResponseServerError, JsonResponse
+from .serializers import VenuesSerializer, ScoredVenuesSerializer
+from .gmaps_client import GMapsClient
+from .venue_client import VenueClient
+from .songkick_client import SongkickClient
+from .location import Location
+
+# from .models import Venue
 import requests as req
 
-class ListVenuesView(views.APIView):
+class VenuesView(views.APIView):
+    venueClient = VenueClient()
+    songkickClient = SongkickClient()
+    gmapsClient = GMapsClient()
+
     def get(self, request):
-        api_key = "io09K9l3ebJxmxe2"
-        city = request.GET["city"]
-        size = int(request.GET["size"])
+        dummy_optimum = Location(52.360503, 4.905650)
+        
+        cities = self.gmapsClient.getClosestAddressableLocations(dummy_optimum.latitude, dummy_optimum.longitude)
 
-        request = req.get("https://api.songkick.com/api/3.0/search/venues.json?query={}&apikey={}".format(city,api_key))
-        venues = request.json()["resultsPage"]["results"]["venue"]
-        venue_coords = []
-        for venue in venues[0:size]:
-            venue_coords.append(Venue(venue["displayName"], venue["lat"], venue["lng"]))
+        sizeKey = "size"
+        if sizeKey not in request.GET or not request.GET[sizeKey].isdigit():
+            return HttpResponseBadRequest("")
 
-        results = VenuesSerializer(venue_coords, many=True).data
+        size = int(request.GET[sizeKey])
+        if size == 1:
+            bestVenue = None
+            for city in cities:
+                venues = self.songkickClient.findVenues(city)
+                currentBestVenue = self.venueClient.getTopVenue(dummy_optimum, venues)
+                if not bestVenue or currentBestVenue.score > bestVenue.score:
+                    bestVenue = currentBestVenue
+            
+            results = ScoredVenuesSerializer(bestVenue).data
+            return Response(results)
+
+
+        bestVenues = []
+        for city in cities:
+            venues = self.songkickClient.findVenues(city)
+            currentBestVenues = self.venueClient.getTopVenues(dummy_optimum, venues)
+            bestVenues.extend(currentBestVenues)
+
+        bestVenues.sort(key=lambda x: x.score)
+        bestVenues = bestVenues[:size]
+
+        results = ScoredVenuesSerializer(bestVenues, many=True).data
         return Response(results)
