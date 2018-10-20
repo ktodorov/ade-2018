@@ -9,6 +9,8 @@ from .location import Location
 from .EA_locator import evaluation, get_best_location
 import csv
 import numpy as np
+import json
+import random
 
 # from .models import Venue
 import requests as req
@@ -18,21 +20,21 @@ class VenuesView(views.APIView):
     songkickClient = SongkickClient()
     gmapsClient = GMapsClient()
 
-    def open_file(self, csvfile):
-        with open(csvfile, 'rt') as file:
-            suppliers = []
-            file = csv.reader(file, delimiter='\n', quotechar='|')
-            for row in file:
-                row = row[0].split(",")
-                suppliers.append(row)
-            return suppliers
+    def post(self, request):
+        if not request.body:
+            return HttpResponseBadRequest("No body provided")
 
-    def get(self, request):
-        #windows
-        data = self.open_file('E:\\OneDrive\\Work\\aed-2018\\backend\\venue_service\\api\\test_data.csv')
-        #mac
-        # data = self.open_file('/Users/oziek/Documents/aed-2018/backend/venue_service/api/test_data.csv')
-        optimumResult = get_best_location(evaluation, data, self.gmapsClient)
+        # parse coordinates from the POST body
+        jsonData = json.loads(request.body)
+        coordinatesKey = "coordinates"
+        coordinates = []
+        if not jsonData or coordinatesKey not in jsonData:
+            return HttpResponseBadRequest("Invalid body provided")
+
+        for currentCoordinates in jsonData[coordinatesKey]:
+            coordinates.append(["", "", random.randint(1, 10), currentCoordinates[0], currentCoordinates[1]])
+
+        optimumResult = get_best_location(evaluation, coordinates, self.gmapsClient)
         optimum = Location(optimumResult[0], optimumResult[1])
 
         cities = self.gmapsClient.getClosestAddressableLocations(optimum.latitude, optimum.longitude)
