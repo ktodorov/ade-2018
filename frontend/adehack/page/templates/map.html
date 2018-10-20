@@ -15,4 +15,52 @@
 
 {% leaflet_map "festmap" callback="window.map_init_basic" %}
 
+<script>
+    // var showVenue = False
+    var venue = [52.3680, 4.9036]
+    var venueMarker = {
+                    radius: 8,
+                    fillColor: "#ffff0f",
+                    color: "#000",
+                    weight: 4,
+                    opacity: 1,
+                    fillOpacity: 1
+                }
+
+    // var showSuppliers = False
+    var suppliers = [
+        [42.9680, 2.9036],
+        [53.3680, -2.9036],
+        [32.40, 7.36],
+        [51.444, -0.22],
+        [43.91160, 5.136],
+        [49.5680, 12.9036]
+    ]
+    var supplierMarker = {
+                    radius: 8,
+                    fillColor: "#0DD4EB",
+                    color: "#000",
+                    weight: 4,
+                    opacity: 1,
+                    fillOpacity: 1
+                }
+
+    
+    function map_init_basic (map, options) {
+        $('#findVenue').click(() => {
+            L.circleMarker(venue, venueMarker).addTo(map);
+
+            map.fitBounds(suppliers);
+        })
+
+        $('#findSuppliers').click(() => {
+            for (var i=0; i<suppliers.length; i++) {
+                L.circleMarker(suppliers[i], supplierMarker).addTo(map);
+            }
+            map.fitBounds(suppliers);
+        })
+    }
+</script>
+
+
 {% endblock %}

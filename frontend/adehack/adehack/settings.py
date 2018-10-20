@@ -37,12 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'bootstrap_modal_forms',
     'page',
     'leaflet',
 ]
 
 LEAFLET_CONFIG = {
-    'DEFAULT_CENTER': (37.5407, -77.4360),
+    'DEFAULT_CENTER': (52.3680, 4.9036),
     'DEFAULT_ZOOM': 13,
     'MIN_ZOOM': 3,
     'MAX_ZOOM': 18,
