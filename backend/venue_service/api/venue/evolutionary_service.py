@@ -29,7 +29,7 @@ class EvolutionaryService:
         '''
         
         popSize = 10
-        maxCycles = 100
+        maxCycles = 10
         pop = Population(popSize, suppliers, gmapsService)
         pop.init_pop()
         for i in range(maxCycles):
