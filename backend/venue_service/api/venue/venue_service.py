@@ -1,12 +1,8 @@
-from .songkick_client import SongkickClient
-import numpy as np
 import math
-import geopy.distance
-from .models import Venue, ScoredVenue
+from .models.venue import Venue
+from .models.scored_venue import ScoredVenue
 
-class VenueClient:
-    songkickClient = SongkickClient()
-
+class VenueService:
     def getTopVenue(self, optimum, venues):
         scoredVenues = self.getTopVenues(optimum, venues)
         return scoredVenues[0]

@@ -1,11 +1,12 @@
 import googlemaps
-from .location import Location 
-from .distance import Distance
+import sys
+from .models.location import Location
+from .models.distance import Distance
 from .exceptions.invalid_use_error import InvalidUseError
 from .exceptions.server_error import ServerError
-from .models import Distance as DbDistance
+from .models.db_distance import DbDistance
 
-class GMapsClient:
+class GMapsService:
     googleMapsClient = None
     GOOGLE_MAPS_API_KEY = 'AIzaSyDXgDfHfSIf7pmZI7_MiANSJ9L2iD4lOE8'
 
