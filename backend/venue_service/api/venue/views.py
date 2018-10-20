@@ -1,4 +1,3 @@
-from DataReader import *
 import csv
 import numpy as np
 import json
@@ -55,8 +54,8 @@ class VenuesView(views.APIView):
         if size == 1:
             bestVenue = None
             for city in cities:
-                # venues = self.songkickClient.findVenues(city)
-                venues = open_file(venues_dict)
+                venues = self.songkickService.findVenues(city)
+                currentBestVenue = self.venueService.getTopVenue(optimumLocation, venues)
                 if not bestVenue or currentBestVenue.score > bestVenue.score:
                     bestVenue = currentBestVenue
 
