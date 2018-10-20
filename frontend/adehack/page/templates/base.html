@@ -20,6 +20,7 @@
   <script src="{% static 'js/jquery.bootstrap.modal.forms.js' %}"></script>
   <script src="/static/bootstrap/js/bootstrap.min.js"></script>
   <script src="{% static 'js/base.js' %}"></script>
+  <script src="{% static 'js/leaflet-heat.js' %}"></script>
   
 <nav class="navbar navbar-inverse" style="background-color:#000">
   <div class="container-fluid">
@@ -36,7 +37,7 @@
         <li><a id="findVenue" class="action"><span class="glyphicon glyphicon-log-in"></span> Find Venue</a></li>
         <li><a id="findSuppliers" class="action"><span class="glyphicon glyphicon-user"></span> Find Suppliers</a></li>
         <li><a class="add_supplier action" data-toggle="modal" data-target="add_supplier"><span class="glyphicon glyphicon-plus"></span> Add Supplier</a></li>
-        <!-- <li><a class="add_supplier" data-toggle="modal" data-target="add_supplier"><span class="glyphicon glyphicon-plus"></span> Upload Data</a></li> -->
+        <li><a id="heatmap" class="action" data-toggle="modal" data-target="add_supplier"><span class="glyphicon glyphicon-plus"></span> Heatmap</a></li>
         <!-- <li><a href="#"><span class="glyphicon glyphicon-screenshot"></span> POI</a></li> -->
       </ul>
     </div>

@@ -16,7 +16,7 @@
 {% leaflet_map "festmap" callback="window.map_init_basic" %}
 
 <script>
-    // var showVenue = False
+    // var showVenue = false
     var venue = [52.3680, 4.9036]
     var venueMarker = {
                     radius: 8,
@@ -27,7 +27,7 @@
                     fillOpacity: 1
                 }
 
-    // var showSuppliers = False
+    // var showSuppliers = false
     var suppliers = [
         [42.9680, 2.9036],
         [53.3680, -2.9036],
@@ -45,6 +45,7 @@
                     fillOpacity: 1
                 }
 
+    var heatmap = false
     
     function map_init_basic (map, options) {
         $('#findVenue').click(() => {
@@ -58,6 +59,17 @@
                 L.circleMarker(suppliers[i], supplierMarker).addTo(map);
             }
             map.fitBounds(suppliers);
+        })
+
+        var heat = L.heatLayer(suppliers)
+        $('#heatmap').click(() => {
+            if (!heatmap){
+                heat.addTo(map);
+                heatmap = true;
+            } else {
+                map.removeLayer(heat);
+                heatmap = false;
+            } 
         })
     }
 </script>
