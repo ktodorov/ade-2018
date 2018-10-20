@@ -12,6 +12,7 @@ class VenueClient:
         return scoredVenues[0]
 
     def getTopVenues(self, optimum, venues, size = -1):
+
         scoredVenues = []
         for venue in venues:
             score = math.sqrt(math.pow(venue.latitude - optimum.latitude, 2) + math.pow(venue.longitude - optimum.longitude, 2))

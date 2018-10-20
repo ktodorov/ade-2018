@@ -8,6 +8,12 @@ class SongkickClient:
         venues = request.json()["resultsPage"]["results"]["venue"]
         venue_coords = []
         for venue in venues[0 : size]:
-            venue_coords.append(Venue(venue["displayName"], venue["lat"], venue["lng"]))
+            latitude = venue["lat"]
+            longitude = venue["lng"]
+            if latitude is None or longitude is None:
+                continue
+
+            newVenue = Venue(venue["displayName"], latitude, longitude)
+            venue_coords.append(newVenue)
 
         return venue_coords

@@ -6,6 +6,9 @@ from .gmaps_client import GMapsClient
 from .venue_client import VenueClient
 from .songkick_client import SongkickClient
 from .location import Location
+from .EA_locator import evaluation, get_best_location
+import csv
+import numpy as np
 
 # from .models import Venue
 import requests as req
@@ -15,10 +18,21 @@ class VenuesView(views.APIView):
     songkickClient = SongkickClient()
     gmapsClient = GMapsClient()
 
+    def open_file(self, csvfile):
+        with open(csvfile, 'rt') as file:
+            suppliers = []
+            file = csv.reader(file, delimiter='\n', quotechar='|')
+            for row in file:
+                row = row[0].split(",")
+                suppliers.append(row)
+            return suppliers
+
     def get(self, request):
-        dummy_optimum = Location(52.360503, 4.905650)
-        
-        cities = self.gmapsClient.getClosestAddressableLocations(dummy_optimum.latitude, dummy_optimum.longitude)
+        data = self.open_file('E:\\OneDrive\\Work\\aed-2018\\backend\\venue_service\\api\\test_data.csv')
+        optimumResult = get_best_location(evaluation, data)
+        optimum = Location(optimumResult[0], optimumResult[1])
+
+        cities = self.gmapsClient.getClosestAddressableLocations(optimum.latitude, optimum.longitude)
 
         sizeKey = "size"
         if sizeKey not in request.GET or not request.GET[sizeKey].isdigit():
@@ -29,7 +43,7 @@ class VenuesView(views.APIView):
             bestVenue = None
             for city in cities:
                 venues = self.songkickClient.findVenues(city)
-                currentBestVenue = self.venueClient.getTopVenue(dummy_optimum, venues)
+                currentBestVenue = self.venueClient.getTopVenue(optimum, venues)
                 if not bestVenue or currentBestVenue.score > bestVenue.score:
                     bestVenue = currentBestVenue
             
@@ -40,7 +54,7 @@ class VenuesView(views.APIView):
         bestVenues = []
         for city in cities:
             venues = self.songkickClient.findVenues(city)
-            currentBestVenues = self.venueClient.getTopVenues(dummy_optimum, venues)
+            currentBestVenues = self.venueClient.getTopVenues(optimum, venues)
             bestVenues.extend(currentBestVenues)
 
         bestVenues.sort(key=lambda x: x.score)
