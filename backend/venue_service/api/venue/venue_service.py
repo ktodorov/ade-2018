@@ -5,6 +5,9 @@ from .models.scored_venue import ScoredVenue
 class VenueService:
     def getTopVenue(self, optimum, venues):
         scoredVenues = self.getTopVenues(optimum, venues)
+        if not scoredVenues or  len(scoredVenues) <= 0:
+            return None
+        
         return scoredVenues[0]
 
     def getTopVenues(self, optimum, venues, size = -1):

@@ -38,3 +38,6 @@ class EvolutionaryService:
                 return Location(best.genotype[0], best.genotype[1])
             
             print ("best for cycle ", i, " is ", best.genotype)
+        
+        result = Location(best.genotype[0], best.genotype[1])
+        return result

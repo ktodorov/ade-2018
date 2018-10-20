@@ -8,7 +8,7 @@ from .models.db_distance import DbDistance
 
 class GMapsService:
     googleMapsClient = None
-    GOOGLE_MAPS_API_KEY = 'AIzaSyDXgDfHfSIf7pmZI7_MiANSJ9L2iD4lOE8'
+    GOOGLE_MAPS_API_KEY = 'AIzaSyDNT9TDzMvgfDbIoZVW-l2nUlKIzXOHHHI'
 
     cachedDistances = {}
     distanceRoundSize = 3
