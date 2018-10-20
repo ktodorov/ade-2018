@@ -57,11 +57,11 @@ class Individual(object):
         return self.left_bound <= num <= self.right_bound
 
     def mate(self, mate_partner, alfa = 0.5):
-        lat1 = self.genotype[0]*alfa + (1-alfa)*self.genotype[0]
-        lat2 = self.genotype[0]*(1-alfa) + alfa*self.genotype[0]
+        lat1 = self.genotype[0]*alfa + (1-alfa)*mate_partner.genotype[0]
+        lat2 = self.genotype[0]*(1-alfa) + alfa*mate_partner.genotype[0]
 
-        long1 = self.genotype[1] * alfa + (1 - alfa) * self.genotype[1]
-        long2 = self.genotype[1] * (1 - alfa) + alfa * self.genotype[1]
+        long1 = self.genotype[1] * alfa + (1 - alfa) * mate_partner.genotype[1]
+        long2 = self.genotype[1] * (1 - alfa) + alfa * mate_partner.genotype[1]
 
         child1 = Individual(lat1,long1,self.left_bound, self.right_bound, self.upper_bound, self.lower_bound)
         child2 = Individual(lat2,long2,self.left_bound, self.right_bound, self.upper_bound, self.lower_bound)
