@@ -108,9 +108,13 @@
 
         $(document).ajaxStart(function () {
             $("#waiting").show();
+            $.blockUI();
         }).ajaxStop(function () {
             $("#waiting").hide();
+            $.unblockUI();
         });
+
+        $(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
 
         var supplierMarkerGroup;
         $('#findSuppliers').click(() => {
