@@ -28,7 +28,10 @@ class VenuesView(views.APIView):
             return suppliers
 
     def get(self, request):
-        data = self.open_file('E:\\OneDrive\\Work\\aed-2018\\backend\\venue_service\\api\\test_data.csv')
+        #windows
+        # data = self.open_file('E:\\OneDrive\\Work\\aed-2018\\backend\\venue_service\\api\\test_data.csv')
+        #mac
+        data = self.open_file('/Users/oziek/Documents/aed-2018/backend/venue_service/api/test_data.csv')
         optimumResult = get_best_location(evaluation, data)
         optimum = Location(optimumResult[0], optimumResult[1])
 
