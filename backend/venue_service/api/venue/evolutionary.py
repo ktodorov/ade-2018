@@ -45,15 +45,6 @@ class Individual(object):
 
             if not within_bounds:
                 new_gene = gene - mutation
-            #
-            # while not within_bounds:
-            #     print(new_gene)
-            #     mut = np.random.normal(mean, sigma)
-            #     new_gene = gene + mut
-            #     if dir == "lat":
-            #         within_bounds = self.check_within_lat(new_gene)
-            #     elif dir == "long":
-            #         within_bounds = self.check_within_long(new_gene)
 
         if dir == "lat":
             self.genotype[0] = new_gene
@@ -74,7 +65,7 @@ class Individual(object):
         long2 = self.genotype[1] * (1 - alfa) + alfa * self.genotype[1]
 
         child1 = Individual(lat1,long1,self.left_bound, self.right_bound, self.upper_bound, self.lower_bound)
-        child2 = Individual(lat1,long1,self.left_bound, self.right_bound, self.upper_bound, self.lower_bound)
+        child2 = Individual(lat2,long2,self.left_bound, self.right_bound, self.upper_bound, self.lower_bound)
 
         return [child1,child2]
 
