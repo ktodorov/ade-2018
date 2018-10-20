@@ -1,11 +1,13 @@
 import sys
 import random
 import numpy as np
+import copy
+
 from .individual import Individual
 
 #Suppliers -> (lat,long,freq)
 class Population(object):
-    def __init__(self,n_pop, suppliers, gmapsClient):
+    def __init__(self, n_pop, suppliers, gmapsService):
         self.pop = []
         self.size = n_pop
         self.suppliers = suppliers
@@ -13,7 +15,7 @@ class Population(object):
         self.offsprings = []
         self.offspring_size = n_pop
         self.mating_pool_size = n_pop
-        self.gmapsClient = gmapsClient
+        self.gmapsService = gmapsService
 
 
     def init_pop(self):
@@ -23,31 +25,31 @@ class Population(object):
         right_bound = -sys.maxsize
 
         for supplier in self.suppliers:
-            lat = float(supplier[-2])
-            long = float(supplier[-1])
+            latitude = supplier.location.latitude
+            longitude = supplier.location.longitude
 
-            if lat > upper_bound:
-                upper_bound = lat
+            if latitude > upper_bound:
+                upper_bound = latitude
 
-            if lat < lower_bound:
-                lower_bound = lat
+            if latitude < lower_bound:
+                lower_bound = latitude
 
-            if long > right_bound:
-                right_bound = long
+            if longitude > right_bound:
+                right_bound = longitude
 
-            if long < left_bound:
-                left_bound = long
+            if longitude < left_bound:
+                left_bound = longitude
 
         for _ in range(self.size):
-            lat = random.uniform(lower_bound,upper_bound)
-            long = random.uniform(left_bound,right_bound)
-            assert lower_bound <= lat <= upper_bound
-            assert left_bound <= long <= right_bound
-            self.pop.append(Individual(lat,long,left_bound,right_bound, upper_bound, lower_bound))
+            latitude = random.uniform(lower_bound,upper_bound)
+            longitude = random.uniform(left_bound,right_bound)
+            assert lower_bound <= latitude <= upper_bound
+            assert left_bound <= longitude <= right_bound
+            self.pop.append(Individual(latitude,longitude,left_bound,right_bound, upper_bound, lower_bound))
 
-    def evaluate_group(self,group, evaluation_func, frequencies, coords):
+    def evaluate_group(self,group, evaluation_func):
         for individual in group:
-            individual.fitness = evaluation_func(individual.genotype,frequencies,coords, self.gmapsClient)
+            individual.fitness = evaluation_func(individual.genotype, self.suppliers, self.gmapsService)
 
     def sort_pop_by_fitness(self):
         self.pop.sort(key=lambda x: x.fitness, reverse=True)
@@ -120,13 +122,13 @@ class Population(object):
             return False
 
 
-    def evolve(self, evaluation, frequencies, long_lats, k):
+    def evolve(self, evaluation, k):
         old_pop = copy.deepcopy(self.pop)
-        self.evaluate_group(self.pop, evaluation, frequencies, long_lats)
+        self.evaluate_group(self.pop, evaluation)
         self.calculate_reproduction_prob()
         self.tournament_selection(k)
         self.make_babies()
-        self.evaluate_group(self.offsprings, evaluation, frequencies, long_lats)
+        self.evaluate_group(self.offsprings, evaluation)
         self.select_survivors()
         new_pop = copy.deepcopy(self.pop)
         converged = self.check_convergence(old_pop,new_pop)

@@ -75,10 +75,10 @@ class GMapsService:
         
         return result
 
-    def getClosestAddressableLocations(self, latitude, longitude):
+    def getClosestAddressableLocations(self, location):
         reverseGeocodeResults = []
         try:
-            reverseGeocodeResults = self.googleMapsClient.reverse_geocode((latitude, longitude))
+            reverseGeocodeResults = self.googleMapsClient.reverse_geocode((location.latitude, location.longitude))
         except googlemaps.exceptions.HTTPError as httpError:
             if httpError.status_code == 400:
                 raise InvalidUseError("Invalid parameters ")
