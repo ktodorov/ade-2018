@@ -1,51 +1,70 @@
 import random
+import sys
 import numpy as np
+import copy
 
 class Individual(object):
     def __init__(self, lat, long, left_bound,right_bound, upper_bound, lower_bound):
         self.genotype = [lat, long]
         self.fitness = 0
         self.mutation_rate = 1./len(self.genotype)
-        self.sigma = 0.1
+        self.sigma_lat = 0.01
+        self.sigma_long = self.sigma_lat*2
         self.reproduction_prob = 0
-        self.left_bound = 0
-        self.right_bound = 0
-        self.upper_bound = 0
-        self.lower_bound = 0
+        self.left_bound = left_bound
+        self.right_bound = right_bound
+        self.upper_bound = upper_bound
+        self.lower_bound = lower_bound
 
     def non_uniform_mutation(self):
-        [lat,long] = self.genotype
-        self.try_to_mutate("lat",self.sigma)
-        self.try_to_mutate("long",self.sigma)
+        self.try_to_mutate("lat")
+        self.try_to_mutate("long")
 
-    def try_to_mutate(self,gene,sigma,mean = 0):
-        if gene == "lat":
+    def try_to_mutate(self,dir,mean = 0):
+        if dir == "lat":
             gene = self.genotype[0]
-        elif gene == "long":
+        elif dir == "long":
             gene = self.genotype[1]
 
-        rand_num = np.random.uniform(0, 1.)
-        new_gene = 0
+        rand_num = np.random.uniform(0.,1.)
+        new_gene = gene
         if rand_num < self.mutation_rate:
             within_bounds = False
-            while not within_bounds:
-                mut = np.random.normal(mean, sigma)
-                new_gene = gene + mut
-                if gene == "lat":
-                    within_bounds = self.check_within_lat(new_gene)
-                elif gene == "long":
-                    within_bounds = self.check_within_long(new_gene)
+            if dir == "lat":
+                mutation = np.random.normal(mean, self.sigma_lat)
+            elif dir == "long":
+                mutation = np.random.normal(mean, self.sigma_long)
 
-        if gene == "lat":
+
+            new_gene = gene + mutation
+
+            if dir == "lat":
+                within_bounds = self.check_within_lat(new_gene)
+            elif dir == "long":
+                within_bounds = self.check_within_long(new_gene)
+
+            if not within_bounds:
+                new_gene = gene - mutation
+            #
+            # while not within_bounds:
+            #     print(new_gene)
+            #     mut = np.random.normal(mean, sigma)
+            #     new_gene = gene + mut
+            #     if dir == "lat":
+            #         within_bounds = self.check_within_lat(new_gene)
+            #     elif dir == "long":
+            #         within_bounds = self.check_within_long(new_gene)
+
+        if dir == "lat":
             self.genotype[0] = new_gene
-        elif gene == "long":
+        elif dir == "long":
             self.genotype[1] = new_gene
 
     def check_within_lat(self,num):
-        return self.lower_bound < num < self.upper_bound
+        return self.lower_bound <= num <= self.upper_bound
 
     def check_within_long(self,num):
-        return self.left_bound < num < self.right_bound
+        return self.left_bound <= num <= self.right_bound
 
     def mate(self, mate_partner, alfa = 0.5):
         lat1 = self.genotype[0]*alfa + (1-alfa)*self.genotype[0]
@@ -72,36 +91,37 @@ class Population(object):
 
 
     def init_pop(self):
-        northern_most = 0
-        southern_most = 0
-        western_most = 0
-        eastern_most = 0
+        upper_bound = -sys.maxsize
+        lower_bound = +sys.maxsize
+        left_bound = +sys.maxsize
+        right_bound = -sys.maxsize
 
         for supplier in self.suppliers:
-            [lat,long,_] = supplier
+            lat = float(supplier[-2])
+            long = float(supplier[-1])
 
-            if lat > northern_most:
+            if lat > upper_bound:
                 upper_bound = lat
 
-            if lat < southern_most:
+            if lat < lower_bound:
                 lower_bound = lat
 
-            if long > eastern_most:
+            if long > right_bound:
                 right_bound = long
 
-            if long < western_most:
+            if long < left_bound:
                 left_bound = long
 
         for _ in range(self.size):
             lat = random.uniform(lower_bound,upper_bound)
             long = random.uniform(left_bound,right_bound)
-            assert southern_most <= lat <= northern_most
-            assert western_most <= long <= eastern_most
+            assert lower_bound <= lat <= upper_bound
+            assert left_bound <= long <= right_bound
             self.pop.append(Individual(lat,long,left_bound,right_bound, upper_bound, lower_bound))
 
-    def evaluate_population(self, evaluation_func):
-        for individual in self.pop:
-            individual.fitness = evaluation_func(individual.genotype)
+    def evaluate_group(self,group, evaluation_func, frequencies, coords):
+        for individual in group:
+            individual.fitness = evaluation_func(individual.genotype,frequencies,coords)
 
     def sort_pop_by_fitness(self):
         self.pop.sort(key=lambda x: x.fitness, reverse=True)
@@ -114,22 +134,25 @@ class Population(object):
 
     def tournament_selection(self,k):
         current_member = 0
-        mating_pool = [None for _ in range(len(self.mating_pool_size))]
+        mating_pool = [None for _ in range(self.mating_pool_size)]
         self.calculate_reproduction_prob()
-        while current_member <= self.mating_pool_size:
-            picked = np.random.choice(self.pop,k)
-            picked.sort(key=lambda x: x.fitness)
+        while current_member < self.mating_pool_size:
+            picked = list(np.random.choice(self.pop,k))
+            picked.sort(key=lambda x: x.fitness, reverse=True)
             best = picked[0]
             mating_pool[current_member] = best
             current_member += 1
 
+
         assert len(mating_pool) == self.mating_pool_size
+        self.mating_pool = mating_pool
 
     def make_babies(self):
-        while(len(self.offsprings != self.offspring_size)):
+        while(len(self.offsprings) != self.offspring_size):
             [father,mother] = np.random.choice(self.pop,2,replace=False)
             kids = father.mate(mother)
             for kid in kids:
+                kid.non_uniform_mutation()
                 self.offsprings.append(kid)
 
     def select_survivors(self):
@@ -143,10 +166,42 @@ class Population(object):
         all.sort(key=lambda x: x.fitness, reverse=True)
 
         self.pop = []
+        self.offsprings = []
 
-
-        while(len(self.pop)):
+        while(len(self.pop) < self.size):
             self.pop.append(all.pop(0))
 
+    def substitute_gen(self):
+        self.pop = []
+        for i in range(len(self.offsprings)):
+            self.pop.append(self.offsprings[i])
 
-POP_SIZE = 3
+        self.offsprings = []
+
+    def print_population(self):
+        for i in range(len(self.pop)):
+            print("Individual with genotype {} with fitness {}".format(self.pop[i].genotype,self.pop[i].fitness))
+
+
+    def check_convergence(self,old_pop, new_pop):
+        sum = 0
+        for i in range(len(old_pop)):
+            sum += (old_pop[i].genotype[0] - new_pop[i].genotype[0]) + (old_pop[i].genotype[1] - new_pop[i].genotype[1])
+
+        if sum == 0:
+            return True
+        else:
+            return False
+
+
+    def evolve(self, evaluation, frequencies, long_lats, k):
+        old_pop = copy.deepcopy(self.pop)
+        self.evaluate_group(self.pop, evaluation, frequencies, long_lats)
+        self.calculate_reproduction_prob()
+        self.tournament_selection(k)
+        self.make_babies()
+        self.evaluate_group(self.offsprings, evaluation, frequencies, long_lats)
+        self.select_survivors()
+        new_pop = copy.deepcopy(self.pop)
+        converged = self.check_convergence(old_pop,new_pop)
+        return self.pop[0], converged
