@@ -1,4 +1,7 @@
-"""google_api URL Configuration
+from django.contrib import admin
+from django.urls import path, re_path, include
+
+"""api URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.1/topics/http/urls/
@@ -15,10 +18,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('addressable-locations/', views.getClosestAddressableLocationsByCoordinates, name='addressable-locations'),
-    path('distance/', views.getDistanceBetweenTwoPoints, name='distance'),
+    re_path('api/', include('venue.urls'))
 ]
